@@ -343,7 +343,15 @@ MonoBehaviour:
   coinPrefab: {fileID: 4830083419393193408, guid: f572824efc2bcf34c989873c0a32aece, type: 3}
   coinsParent: {fileID: 2022998019}
   startPosition: {x: 0, y: 0, z: -2}
-  coinData: {fileID: 11400000, guid: 90d104325146ea04695dbf5fa1a42de0, type: 2}
+  coinData:
+  - {fileID: 11400000, guid: 90d104325146ea04695dbf5fa1a42de0, type: 2}
+  - {fileID: 11400000, guid: 62777ead5a50efa40b664a968de309a0, type: 2}
+  - {fileID: 11400000, guid: a0c7a128bf100524a9e46b39fbf8fcb7, type: 2}
+  - {fileID: 11400000, guid: 0b655ebd31e129446a8190abe82fb5c4, type: 2}
+  - {fileID: 11400000, guid: 57d7983991ba77f4785918da309ac854, type: 2}
+  - {fileID: 11400000, guid: c89f4771c8e37ac42938154013fad86b, type: 2}
+  - {fileID: 11400000, guid: eb76cf20b887eca43b4a6634e05b0f39, type: 2}
+  - {fileID: 11400000, guid: 9f471705f3c20de40960f2ca56294c3c, type: 2}
 --- !u!4 &1013252058
 Transform:
   m_ObjectHideFlags: 0
