@@ -340,6 +340,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b648ac108256c174aacee947bdbb70b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxCents: 1000
+  maxCoins: 20
+  chanceForMaxCoins: 6
+  debug: 0
   coinPrefab: {fileID: 4830083419393193408, guid: f572824efc2bcf34c989873c0a32aece, type: 3}
   coinsParent: {fileID: 2022998019}
   startPosition: {x: 0, y: 0, z: -2}

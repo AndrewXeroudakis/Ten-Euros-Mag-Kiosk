@@ -7,6 +7,25 @@ using UnityEngine;
 public class CoinGenerator : Singleton<CoinGenerator>
 {
     #region Variables
+    [Header("Customize Values")]
+    [SerializeField]
+    [Range(1, 1000000)]
+    [Tooltip("Maximum number of cents.")]
+    int maxCents = 1000;
+    [SerializeField]
+    [Range(1, 100)]
+    [Tooltip("Maximum number of coins.")]
+    int maxCoins = 20;
+    [SerializeField]
+    [Range(0, 100)]
+    [Tooltip("Chance to generate maximum number of coins. \nThe higher the number, the more coins are generated.")]
+    int chanceForMaxCoins = 6;
+    [SerializeField]
+    bool debug;
+
+    static readonly int[] centAmounts = { 1, 2, 5, 10, 20, 50, 100, 200 };
+
+    [Space(25)]
     [SerializeField]
     Coin coinPrefab;
     // Current generated coins parent's transform
@@ -18,13 +37,6 @@ public class CoinGenerator : Singleton<CoinGenerator>
 
     [SerializeField]
     CoinData[] coinData;
-
-    // Get minimum coin count
-    int maxCents = 1000;
-    int maxCoins = 20;
-    static readonly int[] centAmounts = { 1, 2, 5, 10, 20, 50, 100, 200};
-
-    static readonly int[] safetyCentAmounts = { 200, 200, 200, 200, 200 };
 
     // Random Position
     static readonly float minRangeX = -4f;
@@ -40,10 +52,6 @@ public class CoinGenerator : Singleton<CoinGenerator>
     #region Unity Callbacks
     private void Start()
     {
-        maxCents = 1000;
-        maxCoins = 20;
-        Debug.Log("maxCents = " + maxCents);
-        Debug.Log("maxCoins = " + maxCoins);
         GenerateCoins();
     }
     #endregion
@@ -54,24 +62,31 @@ public class CoinGenerator : Singleton<CoinGenerator>
         // Generate cent amounts
         List<int> generatedCentAmounts = GenerateCentAmounts();
 
-        int totalCents = 0;
-        Debug.Log("generatedCentAmounts.Count = " + generatedCentAmounts.Count);
-
+        // Instantiate coins at start position
         for (int i = 0; i < generatedCentAmounts.Count; i++)
         {
             Coin coin = Instantiate(coinPrefab, startPosition, Quaternion.identity, coinsParent);
             int centAmount = generatedCentAmounts[i];
             coin.SetupCoin(coinData[Array.IndexOf(centAmounts, centAmount)]);
-
-            Debug.Log("centAmount = " + centAmount);
-            totalCents += centAmount;
-            
             Vector3 randomPosition = new Vector3(UnityEngine.Random.Range(minRangeX, maxRangeX), UnityEngine.Random.Range(minRangeY, maxRangeY), 0f);
             float randomDuration = UnityEngine.Random.Range(minDuration, maxDuration);
             StartCoroutine(coin.MoveTo(randomPosition, randomDuration));
         }
 
-        Debug.Log("totalCents = " + totalCents);
+        // Debug
+        if (debug)
+        {
+            int totalCents = 0;
+            Debug.Log("Coins = " + generatedCentAmounts.Count);
+
+            foreach (int amount in generatedCentAmounts)
+            {
+                Debug.Log("Cent amount = " + amount);
+                totalCents += amount;
+            }
+
+            Debug.Log("Total cents = " + totalCents);
+        }
     }
 
     List<int> GenerateCentAmounts()
@@ -82,26 +97,9 @@ public class CoinGenerator : Singleton<CoinGenerator>
 
         // Get remaining cent amounts
         List<int> remainingCentAmounts = GetRemainingCentAmounts(remainingCents);
-        Debug.Log("remainingCentAmounts.Count = " + remainingCentAmounts.Count);
 
         while (remainingCents > 0)
         {
-            // Check if maxCoins have been reached
-            /*if (generatedCentAmounts.Count + remainingCentAmounts.Count == maxCoins)
-            {
-                // Join the two lists 
-                generatedCentAmounts.AddRange(remainingCentAmounts);
-
-                // Debug
-                foreach (int amount in remainingCentAmounts)
-                {
-                    remainingCents -= amount;
-                }
-                Debug.Log("remainingCents = " + remainingCents);
-                break;
-            }*/
-
-            // Select random cent amount
             // Create a new cent amounts copy list
             List<int> centAmountsCopy = centAmounts.ToList();
 
@@ -125,7 +123,6 @@ public class CoinGenerator : Singleton<CoinGenerator>
 
             // Create remainingCentAmountsTest and get remaining cent amounts
             List<int> remainingCentAmountsTest = GetRemainingCentAmounts(remainingCents - centAmount);
-            Debug.Log("---------------------------------------------");
 
             // Check if the remaining coins surpass the maxCoins,
             // 1 is for the centAmount that has been randomly selected but has not been added yet
@@ -133,7 +130,6 @@ public class CoinGenerator : Singleton<CoinGenerator>
             {
                 // Remove cent amount from centAmountsCopy
                 centAmountsCopy.Remove(centAmount);
-                Debug.Log("Removed cent amount = " + centAmount);
 
                 // Escape loop if there are no more centAmounts to choose 
                 if (centAmountsCopy.Count <= 0)
@@ -150,82 +146,25 @@ public class CoinGenerator : Singleton<CoinGenerator>
                 remainingCentAmountsTest = GetRemainingCentAmounts(remainingCents - centAmount);
             }
 
+            // Calculate chance to stop before it reaches maxCoins
+            int randomDice = UnityEngine.Random.Range(0, chanceForMaxCoins);
+
             // No cent amount could be added
-            if (centAmount == 0)
+            if (centAmount == 0 || randomDice == 0)
             {
-                Debug.Log("No cent amount could be added");
                 // Join the two lists 
                 generatedCentAmounts.AddRange(remainingCentAmounts);
-
-                // Debug
-                foreach (int amount in remainingCentAmounts)
-                {
-                    remainingCents -= amount;
-                }
-                Debug.Log("remainingCents = " + remainingCents);
                 break;
             }
 
-            Debug.Log("Selected cent amount = " + centAmount);
             // Set remainingCentAmounts
             remainingCentAmounts = remainingCentAmountsTest;
-            Debug.Log("remainingCentAmounts.Count = " + remainingCentAmounts.Count);
 
             // Add amount to generatedCentAmounts list
-            //int centAmount = centAmounts[randomIndex];
             generatedCentAmounts.Add(centAmount);
-            Debug.Log("generatedCentAmounts.Count = " + generatedCentAmounts.Count);
-            Debug.Log("---------------------------------------------");
 
             // Subtract amount from remainingCents
             remainingCents -= centAmount;
-
-
-            // Check if there are enough coin slots left to randomly generate cent amounts
-            /*if (generatedCentAmounts.Count + remainingCentAmounts.Count < maxCoins)
-            {
-                // Create a cent amounts copy list
-                List<int> centAmountsCopy = centAmounts.ToList();
-
-                // Randomly select cent amount
-                int randomIndex = UnityEngine.Random.Range(0, centAmountsCopy.Count);
-                int centAmount = centAmountsCopy[randomIndex];
-
-                // Create remainingCentAmountsTest and get remaining cent amounts
-                List<int> remainingCentAmountsTest = GetRemainingCentAmounts(remainingCents - centAmount);
-                Debug.Log("---------------------------------------------");
-                // Make sure the remaining cent amounts don't surpass the maxCoins
-                while (generatedCentAmounts.Count + remainingCentAmountsTest.Count > maxCoins)
-                {
-                    // Remove cent amount from centAmountsCopy
-                    centAmountsCopy.Remove(centAmount);
-                    Debug.Log("Removed cent amount = " + centAmount);
-                    // Randomly select new cent amount
-                    randomIndex = UnityEngine.Random.Range(0, centAmountsCopy.Count);
-                    centAmount = centAmountsCopy[randomIndex];
-                    
-                    // Get remaining cent amounts
-                    remainingCentAmountsTest = GetRemainingCentAmounts(remainingCents - centAmount);
-                }
-                Debug.Log("Selected cent amount = " + centAmount);
-                // Set remainingCentAmounts
-                remainingCentAmounts = remainingCentAmountsTest;
-                Debug.Log("remainingCentAmounts.Count = " + remainingCentAmounts.Count);
-                
-                // Add amount to generatedCentAmounts list
-                //int centAmount = centAmounts[randomIndex];
-                generatedCentAmounts.Add(centAmount);
-                Debug.Log("generatedCentAmounts.Count = " + generatedCentAmounts.Count);
-                Debug.Log("---------------------------------------------");
-                // Subtract amount from remainingCents
-                remainingCents -= centAmount;
-            }
-            else
-            {
-                // Join the two lists 
-                generatedCentAmounts.AddRange(remainingCentAmounts);
-                break;
-            }*/
         }
 
         return generatedCentAmounts;
@@ -233,29 +172,23 @@ public class CoinGenerator : Singleton<CoinGenerator>
 
     List<int> GetRemainingCentAmounts(int _remainingCents)
     {
+        // Create remainingCentAmounts list
         List<int> remainingCentAmounts = new List<int>();
 
-        if (_remainingCents < 0)
-            Debug.LogWarning("Negative remainingCents");
-
-        int remainingCents = _remainingCents;
-        //Debug.Log("remainingCents = " + remainingCents);
-        while (remainingCents > 0)
+        // Set remainingCentAmounts
+        while (_remainingCents > 0)
         {
             for (int i = centAmounts.Length - 1; i >= 0; i--)
             {
-                if (remainingCents >= centAmounts[i])
+                if (_remainingCents >= centAmounts[i])
                 {
-                    remainingCents -= centAmounts[i];
+                    _remainingCents -= centAmounts[i];
                     remainingCentAmounts.Add(centAmounts[i]);
-                    //Debug.Log("centAmount = " + centAmounts[i]);
-                    //Debug.Log("remainingCents = " + remainingCents);
                     break;
                 }
             }
         }
-        //Debug.Log("remainingCentAmounts.Count = " + remainingCentAmounts.Count);
-        //Debug.Log("---------------------------------------------");
+
         return remainingCentAmounts;
     }
     #endregion
