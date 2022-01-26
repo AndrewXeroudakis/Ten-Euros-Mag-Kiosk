@@ -25,6 +25,9 @@ public class CoinGenerator : Singleton<CoinGenerator>
 
     static readonly int[] centAmounts = { 1, 2, 5, 10, 20, 50, 100, 200 };
 
+    List<Coin> coins;
+    int startChanceForMaxCoins;
+
     [Space(25)]
     [SerializeField]
     Coin coinPrefab;
@@ -34,7 +37,7 @@ public class CoinGenerator : Singleton<CoinGenerator>
     // The world position a coin is instantiated in
     [SerializeField]
     Vector3 startPosition;
-
+    // All coin data
     [SerializeField]
     CoinData[] coinData;
 
@@ -47,25 +50,39 @@ public class CoinGenerator : Singleton<CoinGenerator>
     // Random Duration
     static readonly float minDuration = 1f;
     static readonly float maxDuration = 2f;
+
+    // Events
+    public delegate void CollectedAll();
+    public event CollectedAll OnCollectedAll;
     #endregion
 
     #region Unity Callbacks
-    private void Start()
+    protected override void Awake()
     {
-        GenerateCoins();
+        base.Awake();
+
+        startChanceForMaxCoins = chanceForMaxCoins;
     }
     #endregion
 
     #region Methods
-    void GenerateCoins()
+    public void GenerateCoins()
     {
         // Generate cent amounts
         List<int> generatedCentAmounts = GenerateCentAmounts();
+
+        // Reset coin order in layer
+        if (Coin.orderInLayer != 0)
+            Coin.orderInLayer = 0;
+
+        // Initialize coins list
+        coins = new List<Coin>();
 
         // Instantiate coins at start position
         for (int i = 0; i < generatedCentAmounts.Count; i++)
         {
             Coin coin = Instantiate(coinPrefab, startPosition, Quaternion.identity, coinsParent);
+            coins.Add(coin);
             int centAmount = generatedCentAmounts[i];
             coin.SetupCoin(coinData[Array.IndexOf(centAmounts, centAmount)]);
             Vector3 randomPosition = new Vector3(UnityEngine.Random.Range(minRangeX, maxRangeX), UnityEngine.Random.Range(minRangeY, maxRangeY), 0f);
@@ -190,6 +207,36 @@ public class CoinGenerator : Singleton<CoinGenerator>
         }
 
         return remainingCentAmounts;
+    }
+
+    public void RemoveCoin(Coin _coin)
+    {
+        // Remove coin from List
+        coins.Remove(_coin);
+
+        // Check if all coins are collected
+        if (coins.Count <= 0)
+            OnCollectedAll?.Invoke();
+    }
+
+    public void RemoveAllCoins()
+    {
+        // Destroy all coins
+        foreach (Coin coin in coins)
+            Destroy(coin.gameObject);
+
+        // Clear coins list
+        coins.Clear();
+    }
+
+    public void AddValueToChanceForMaxCoins(int _value)
+    {
+        chanceForMaxCoins = startChanceForMaxCoins + _value;
+    }
+
+    public void ResetChanceForMaxCoins()
+    {
+        chanceForMaxCoins = startChanceForMaxCoins;
     }
     #endregion
 }

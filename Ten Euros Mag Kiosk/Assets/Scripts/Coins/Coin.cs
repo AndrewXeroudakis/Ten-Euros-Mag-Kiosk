@@ -2,15 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.EventSystems;
 
 public class Coin : MonoBehaviour
 {
     #region Variables
     CoinData coinData;
     SpriteRenderer spriteRenderer;
-    //Vector3 endPosition;
+    CircleCollider2D circleCollider2D;
     public bool Interactable { get; private set; }
-    //static readonly float defaultTweenDuration = 2f; //0.25f;
+
+    public static int orderInLayer;
     #endregion
 
     #region Unity Callbacks
@@ -30,7 +32,9 @@ public class Coin : MonoBehaviour
     {
         Interactable = false;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        circleCollider2D = gameObject.GetComponent<CircleCollider2D>();
     }
+
     void SetCoinData(CoinData _coinData)
     {
         coinData = _coinData;
@@ -40,29 +44,46 @@ public class Coin : MonoBehaviour
     {
         if (spriteRenderer != null)
             spriteRenderer.sprite = _sprite;
+
+        // Set order in layer
+        spriteRenderer.sortingOrder = orderInLayer + 1;
+        orderInLayer = spriteRenderer.sortingOrder;
+
+        // Set Collider size
+        SetCircleCollider2DSize();
     }
 
-    /*void SetEndPosition(Vector3 _endPosition)
+    void SetCircleCollider2DSize()
     {
-        endPosition = _endPosition;
-    }*/
+        Vector3 spriteHalfSize = spriteRenderer.sprite.bounds.extents;
+        circleCollider2D.radius = spriteHalfSize.x > spriteHalfSize.y ? spriteHalfSize.x : spriteHalfSize.y;
+    }
 
-    public void SetupCoin(CoinData _coinData/*, Vector3 _endPosition*/)
+    public void SetupCoin(CoinData _coinData)
     {
-        //Debug.Log(Interactable);
         SetCoinData(_coinData);
         SetSprite(_coinData.sprite);
-        //SetEndPosition(_endPosition);
     }
 
     public IEnumerator MoveTo(Vector3 _position, float _duration)
     {
         Tween tween = transform.DOMove(_position, _duration).SetEase(Ease.OutQuart);
 
-        yield return tween.Elapsed();
+        yield return tween.WaitForCompletion();
 
         Interactable = true;
-        //Debug.Log(Interactable);
+    }
+
+    public void CollectCoin()
+    {
+        // Play Sound
+        //AudioManager.Instance.PlaySound("");
+
+        // Remove coin from coins
+        CoinGenerator.Instance.RemoveCoin(this);
+
+        // Destroy coin
+        Destroy(gameObject);
     }
     #endregion
 }
