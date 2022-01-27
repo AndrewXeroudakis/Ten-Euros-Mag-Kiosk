@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
@@ -11,15 +14,29 @@ public class GameManager : Singleton<GameManager>
     int maxTime = 30;
     [SerializeField]
     int timer;
+    [SerializeField]
+    bool debug;
+    //[SerializeField]
+    int maxLeaderboardSlots = 5;
 
     Coroutine timerCoroutine;
+
+    // Leaderboard
+    List<Score> leaderboard;
+
+    // PlayerPrefs keys
+    static readonly string ROUND_KEY = "round_";
+    static readonly string DATETIME_KEY = "dateTime_";
+
+    // DateTime parsing method
+    const string FMT = "O";
     #endregion
 
     #region Unity Callbacks
     protected override void Awake()
     {
         base.Awake();
-
+        //PlayerPrefs.DeleteAll(); // REMOVE THIS!!!!
         InitializeVariables();
     }
 
@@ -40,7 +57,7 @@ public class GameManager : Singleton<GameManager>
     #region Methods
     void InitializeVariables()
     {
-        currentRound = 0;
+        leaderboard = LoadScores();
     }
 
     void SubscribeToEvents()
@@ -98,7 +115,13 @@ public class GameManager : Singleton<GameManager>
         // Game Over Graphic
         Debug.Log("GAME OVER");
 
-        // Set timer
+        // Check and save new score
+        if (leaderboard != null)
+            if (leaderboard.Count < maxLeaderboardSlots ||
+                leaderboard[leaderboard.Count - 1].round < currentRound)
+                SaveScore(new Score(currentRound, DateTime.Now));
+
+        // Stop timer
         if (timerCoroutine != null)
             StopCoroutine(timerCoroutine);
 
@@ -120,19 +143,99 @@ public class GameManager : Singleton<GameManager>
 
     void OnCollectedAllCoins()
     {
+        // Stop timer
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
+
         StartCoroutine(WinRound());
     }
 
     IEnumerator StartGame()
     {
+        // Set current round
+        currentRound = 0;
+
         // Reset chance for max coins
         CoinGenerator.Instance.ResetChanceForMaxCoins();
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0);
 
         // Start First Round
         StartCoroutine(StartRound());
     }
     
+    void SaveScore(Score _score)
+    {
+        // Add new score to leaderboard list
+        leaderboard.Add(_score);
+
+        // Sort the list
+        if (leaderboard.Count > 1)
+            leaderboard = leaderboard.OrderByDescending(s => s.round).ToList();
+
+        // Save all scores
+        for (int i = 0; i < maxLeaderboardSlots; i++)
+        {
+            if (i < leaderboard.Count)
+            {
+                PlayerPrefs.SetInt(ROUND_KEY + i.ToString(), leaderboard[i].round);
+                PlayerPrefs.SetString(DATETIME_KEY + i.ToString(), leaderboard[i].dateTime.ToString(FMT));
+            }
+            else
+                break;
+        }
+
+        // Debug
+        if (debug)
+            PrintScores();
+    }
+
+    Score LoadScore(int _index)
+    {
+        // Get values from playerPrefs
+        int round = PlayerPrefs.GetInt(ROUND_KEY + _index.ToString());
+        string dateTimeString = PlayerPrefs.GetString(DATETIME_KEY + _index.ToString());
+        DateTime dateTime = DateTime.Now;
+        if (!string.IsNullOrEmpty(dateTimeString))
+            dateTime = DateTime.ParseExact(dateTimeString, FMT, CultureInfo.InvariantCulture);
+
+        // Check if round is 0 then the slot is empty
+        if (round != 0)
+        {
+            Score score = new Score(round, dateTime);
+            return score;
+        }
+        else
+            return null;
+    }
+
+    List<Score> LoadScores()
+    {
+        // Initialize loadedScores list
+        List<Score> loadedScores = new List<Score>();
+
+        // Load scores and add them to loadedScores list
+        for (int i = 0; i < maxLeaderboardSlots; i++)
+        {
+            Score score = LoadScore(i);
+            if (score != null)
+                loadedScores.Add(score);
+        }
+
+        return loadedScores;
+    }
+
+    void PrintScores()
+    {
+        List<Score> loadedScores = LoadScores();
+
+        if (loadedScores != null)
+        {
+            for (int i = 0; i < loadedScores.Count; i++)
+            {
+                Debug.Log(string.Format("score {0} : round = {1}, dateTime = {2}", i, loadedScores[i].round, loadedScores[i].dateTime));
+            }
+        }
+    }
     #endregion
 }
