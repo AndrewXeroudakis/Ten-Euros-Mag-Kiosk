@@ -43,9 +43,6 @@ public class GameManager : Singleton<GameManager>
     void Start()
     {
         SubscribeToEvents();
-
-        // Start Game
-        StartCoroutine(StartGame());
     }
 
     void Update()
@@ -131,7 +128,7 @@ public class GameManager : Singleton<GameManager>
         yield return new WaitForSeconds(1);
 
         // Restart game
-        StartCoroutine(StartGame());
+        StartCoroutine(StartGameEnumerator());
     }
 
     IEnumerator WinRound()
@@ -150,7 +147,12 @@ public class GameManager : Singleton<GameManager>
         StartCoroutine(WinRound());
     }
 
-    IEnumerator StartGame()
+    public void StartGame()
+    {
+        StartCoroutine(StartGameEnumerator());
+    }
+
+    IEnumerator StartGameEnumerator()
     {
         // Set current round
         currentRound = 0;
