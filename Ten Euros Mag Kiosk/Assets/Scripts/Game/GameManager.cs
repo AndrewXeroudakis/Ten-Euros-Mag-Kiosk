@@ -36,7 +36,7 @@ public class GameManager : Singleton<GameManager>
     protected override void Awake()
     {
         base.Awake();
-        //PlayerPrefs.DeleteAll(); // REMOVE THIS!!!!
+        PlayerPrefs.DeleteAll(); // REMOVE THIS!!!!
         InitializeVariables();
     }
 
@@ -68,32 +68,49 @@ public class GameManager : Singleton<GameManager>
         if (timerCoroutine != null)
             StopCoroutine(timerCoroutine);
         timer = maxTime - currentRound;
+        UIManager.Instance.gameUIController.SetSliderMaxValue(timer);
+        UIManager.Instance.gameUIController.SetTimer(timer);
 
         // Set chance for max coins
         CoinGenerator.Instance.AddValueToChanceForMaxCoins(currentRound);
 
         // Set Round
         currentRound++;
+        UIManager.Instance.gameUIController.SetRoundText(currentRound);
 
         // Generate Coins
         CoinGenerator.Instance.GenerateCoins();
 
-        // Play graphics: Round #
+        // Display graphics: Ready
+        UIManager.Instance.gameUIController.DisplayReady();
+        yield return new WaitForSeconds(1f);
 
+        // Display graphics: Set
+        UIManager.Instance.gameUIController.DisplaySet();
+        yield return new WaitForSeconds(1f);
 
-        yield return new WaitForSeconds(2);
+        // Display graphics: Go
+        UIManager.Instance.gameUIController.DisplayGo();
 
-        // Play graphics: Go!
+        // Make all coins interactable
+        CoinGenerator.Instance.SetAllCoinsInteractable();
 
         // Start timer
         timerCoroutine = StartCoroutine(Timer());
+
+        yield return new WaitForSeconds(1);
+
+        // Display graphics: Nothing
+        UIManager.Instance.gameUIController.DisplayNothing();
     }
 
     IEnumerator Timer()
     {
         yield return new WaitForSeconds(1);
 
+        // Set timer
         timer--;
+        UIManager.Instance.gameUIController.SetTimer(timer);
 
         // Check timer
         if (timer <= 0)
@@ -110,13 +127,16 @@ public class GameManager : Singleton<GameManager>
     IEnumerator GameOver()
     {
         // Game Over Graphic
-        Debug.Log("GAME OVER");
+        UIManager.Instance.gameUIController.DisplayGameOver();
 
         // Check and save new score
         if (leaderboard != null)
             if (leaderboard.Count < maxLeaderboardSlots ||
                 leaderboard[leaderboard.Count - 1].round < currentRound)
+            {
                 SaveScore(new Score(currentRound, DateTime.Now));
+            }
+                
 
         // Stop timer
         if (timerCoroutine != null)
@@ -127,14 +147,22 @@ public class GameManager : Singleton<GameManager>
 
         yield return new WaitForSeconds(1);
 
-        // Restart game
-        StartCoroutine(StartGameEnumerator());
+        // Display Leaderboard
+        UIManager.Instance.gameUIController.DisplayLeaderboard(leaderboard);
+    }
+
+    public void RestartGame()
+    {
+        StartGame();
     }
 
     IEnumerator WinRound()
     {
+        // Display graphics: You Win!
+        //UIManager.Instance.gameUIController.DisplayWin();
         yield return new WaitForSeconds(1);
 
+        // Start next round
         StartCoroutine(StartRound());
     }
 

@@ -229,6 +229,13 @@ public class CoinGenerator : Singleton<CoinGenerator>
         coins.Clear();
     }
 
+    public void SetAllCoinsInteractable()
+    {
+        // Make all coins interactable
+        foreach (Coin coin in coins)
+            coin.EnableInteractable();
+    }
+
     public void AddValueToChanceForMaxCoins(int _value)
     {
         chanceForMaxCoins = startChanceForMaxCoins + _value;

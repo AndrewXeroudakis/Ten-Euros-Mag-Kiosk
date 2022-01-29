@@ -71,7 +71,7 @@ public class Coin : MonoBehaviour
 
         yield return tween.WaitForCompletion();
 
-        Interactable = true;
+        // Do something?
     }
 
     public void CollectCoin()
@@ -84,6 +84,11 @@ public class Coin : MonoBehaviour
 
         // Destroy coin
         Destroy(gameObject);
+    }
+
+    public void EnableInteractable()
+    {
+        Interactable = true;
     }
     #endregion
 }
