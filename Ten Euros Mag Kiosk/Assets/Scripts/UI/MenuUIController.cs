@@ -8,7 +8,6 @@ public class MenuUIController : MonoBehaviour
     #region Variables
     [Header("Menu UI Elements")]
     public GameObject menuContainer;
-    public GameObject menuTransition;
     public GameObject menuOptionsContainer;
     public GameObject popUpDialogContainer;
     [Space]
@@ -20,20 +19,20 @@ public class MenuUIController : MonoBehaviour
     public GameObject optionsContainer;
     public Slider soundEffectsVolumeSlider;
     public Slider musicVolumeSlider;
-    public Button noButton;
+    public Button resetButton;
     public Button yesButton;
     [Space]
     [Header("Quit")]
-    public GameObject quitDialogPanel;
+    public GameObject quitContainer;
     public Button quitButton;
     public Button quitYesButton;
     public Button quitNoButton;
 
+    // Music and Sound
     static readonly string SOUNDEFFECTS_VOLUME_KEY = "soundEffectsVolume";
     static readonly string MUSIC_VOLUME_KEY = "musicVolume";
     static readonly float defaultSoundEffectsVolume = 0.5f;
     static readonly float defaultMusicVolume = 0.5f;
-
     AudioSource menuMusic;
     #endregion
 
@@ -53,7 +52,7 @@ public class MenuUIController : MonoBehaviour
 
         // Options
         optionsButton.onClick.AddListener(OptionsButtonPressed);
-        noButton.onClick.AddListener(NoButtonPressed);
+        resetButton.onClick.AddListener(ResetButtonPressed);
         yesButton.onClick.AddListener(YesButtonPressed);
 
         // Quit
@@ -70,6 +69,9 @@ public class MenuUIController : MonoBehaviour
 
     public void OpenMainMenu()
     {
+        // Unause
+        Time.timeScale = 1;
+
         // Disable popUpDialogContainer
         HidePopupDialogContainer(true);
 
@@ -83,7 +85,10 @@ public class MenuUIController : MonoBehaviour
         if (menuMusic == null)
             menuMusic = AudioManager.Instance.PlayMusic("MenuMusic");
         else
+        {
+            menuMusic.Stop();
             menuMusic.Play();
+        }
     }
 
     #region Hide Scripts
@@ -150,6 +155,22 @@ public class MenuUIController : MonoBehaviour
                 optionsContainer.SetActive(true);
         }
     }
+
+    public void HideQuit(bool _isHidden)
+    {
+        if (_isHidden)
+        {
+            // Disable options container
+            if (quitContainer.activeSelf)
+                quitContainer.SetActive(false);
+        }
+        else
+        {
+            // Enable options container
+            if (!quitContainer.activeSelf)
+                quitContainer.SetActive(true);
+        }
+    }
     #endregion
 
     #region Play Game
@@ -165,11 +186,11 @@ public class MenuUIController : MonoBehaviour
         // Hide Menu
         HideMenu(true);
 
+        // Open Game UI
+        UIManager.Instance.gameUIController.OpenGameUI();
+
         // Start Game
         GameManager.Instance.StartGame();
-
-        // Move Transition
-        //StartCoroutine(UIManager.Instance.MoveMenuTransition(true, delegate { GameManager.Instance.StartGame(); }));
     }
     #endregion
 
@@ -184,6 +205,9 @@ public class MenuUIController : MonoBehaviour
 
         // Show options
         HideOptions(false);
+
+        // Hide quit
+        HideQuit(true);
 
         // Show popUpDialogContainer
         HidePopupDialogContainer(false);
@@ -213,7 +237,7 @@ public class MenuUIController : MonoBehaviour
             musicVolumeSlider.value = defaultMusicVolume;
     }
 
-    void NoButtonPressed()
+    void ResetButtonPressed()
     {
         // Play Sound
         UIManager.Instance.PlayBackSelectedSFX();
@@ -221,12 +245,6 @@ public class MenuUIController : MonoBehaviour
         // Reset values
         soundEffectsVolumeSlider.value = defaultSoundEffectsVolume;
         musicVolumeSlider.value = defaultMusicVolume;
-
-        // Hide options
-        HideOptions(true);
-
-        // Hide popUpDialogContainer
-        HidePopupDialogContainer(true);
     }
 
     void YesButtonPressed()
@@ -242,10 +260,6 @@ public class MenuUIController : MonoBehaviour
 
         // Hide popUpDialogContainer
         HidePopupDialogContainer(true);
-
-        // Fade Transition
-        /*StartCoroutine(UIManager.Instance.FadeTransition(delegate { HideAudio(true); },
-                                                         delegate { UIManager.Instance.optionsController.HideOptions(false); }));*/
     }
     #endregion
 
@@ -255,13 +269,14 @@ public class MenuUIController : MonoBehaviour
         // Play Sound
         UIManager.Instance.PlayOptionSelectedSFX();
 
-        // Enable popUpDialogContainer
-        if (!popUpDialogContainer.activeSelf)
-            popUpDialogContainer.SetActive(true);
+        // Hide options
+        HideOptions(true);
 
-        // Open Quit Dialog
-        if (!quitDialogPanel.activeSelf)
-            quitDialogPanel.SetActive(true);
+        // Show quit
+        HideQuit(false);
+
+        // Show popUpDialogContainer
+        HidePopupDialogContainer(false);
     }
 
     void QuitYesButtonPressed()

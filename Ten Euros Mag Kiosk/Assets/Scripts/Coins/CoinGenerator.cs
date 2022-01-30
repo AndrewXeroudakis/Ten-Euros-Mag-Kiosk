@@ -52,8 +52,9 @@ public class CoinGenerator : Singleton<CoinGenerator>
     static readonly float maxDuration = 2f;
 
     // Events
-    public delegate void CollectedAll();
-    public event CollectedAll OnCollectedAll;
+    public delegate void CollectCoin();
+    public event CollectCoin OnCollectedAll;
+    public event CollectCoin OnCollectedCoin;
     #endregion
 
     #region Unity Callbacks
@@ -217,6 +218,9 @@ public class CoinGenerator : Singleton<CoinGenerator>
         // Remove coin from List
         coins.Remove(_coin);
 
+        // Invoke collected coin 
+        OnCollectedCoin?.Invoke();
+
         // Check if all coins are collected
         if (coins.Count <= 0)
             OnCollectedAll?.Invoke();
@@ -248,5 +252,7 @@ public class CoinGenerator : Singleton<CoinGenerator>
     {
         chanceForMaxCoins = startChanceForMaxCoins;
     }
+
+    public int GetCoins() =>  coins != null ? coins.Count : 0;
     #endregion
 }

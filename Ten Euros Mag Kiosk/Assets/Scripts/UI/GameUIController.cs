@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class GameUIController : MonoBehaviour
 {
@@ -16,6 +17,12 @@ public class GameUIController : MonoBehaviour
     TMP_Text roundText;
     [SerializeField]
     TMP_Text roundInfoText;
+    [SerializeField]
+    TMP_Text coinsText;
+    [SerializeField]
+    TMP_Text totalCoinsText;
+    [SerializeField]
+    Button leaderboardButton;
     [Space]
     [Header("Leaderboard")]
     [SerializeField]
@@ -25,8 +32,11 @@ public class GameUIController : MonoBehaviour
     [SerializeField]
     Button restartButton;
     [SerializeField]
+    Button resumeButton;
+    [SerializeField]
     TMP_Text[] scoreTexts;
     
+    // Display
     static readonly string READY_TEXT = "READY";
     static readonly string SET_TEXT = "SET";
     static readonly string GO_TEXT = "GO!";
@@ -44,13 +54,32 @@ public class GameUIController : MonoBehaviour
     #region Methods
     void SubscribeButtons()
     {
+        // Game
+        leaderboardButton.onClick.AddListener(LeaderboardButtonPressed);
+
         // Leaderboard
         menuButton.onClick.AddListener(MenuButtonPressed);
         restartButton.onClick.AddListener(RestartButtonPressed);
+        resumeButton.onClick.AddListener(ResumeButtonPressed);
+    }
+
+    public void OpenGameUI()
+    {
+        // Disable leaderboard panel
+        leaderboardPanel.SetActive(false);
+
+        // Disable Resume Button
+        resumeButton.gameObject.transform.parent.gameObject.SetActive(false);
     }
 
     #region Round
     public void SetRoundText(int _round) => roundText.text = _round.ToString();
+    #endregion
+
+    #region Coins
+    public void ResetCoinsText() => coinsText.text = 0.ToString();
+    public void SetCoinsText(int _coins) => coinsText.text = (Int32.Parse(totalCoinsText.text) -_coins).ToString();
+    public void SetTotalCoinsText(int _coinsTotal) => totalCoinsText.text = _coinsTotal.ToString();
     #endregion
 
     #region Timer
@@ -101,6 +130,18 @@ public class GameUIController : MonoBehaviour
         leaderboardPanel.SetActive(true);
     }
 
+    void LeaderboardButtonPressed()
+    {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
+        // Enable Resume Button
+        resumeButton.gameObject.transform.parent.gameObject.SetActive(true);
+
+        // Pause Game
+        GameManager.Instance.PauseGame(true);
+    }
+
     void MenuButtonPressed()
     {
         // Play Sound
@@ -109,8 +150,8 @@ public class GameUIController : MonoBehaviour
         // Disable leaderboard panel
         leaderboardPanel.SetActive(false);
 
-        // Stop Music
-        GameManager.Instance.StopLeaderboardMusic();
+        // Clear Current Game
+        GameManager.Instance.ClearGame();
 
         // Display menu
         UIManager.Instance.menuUIController.OpenMainMenu();
@@ -126,6 +167,21 @@ public class GameUIController : MonoBehaviour
 
         // Restart Game
         GameManager.Instance.RestartGame();
+    }
+
+    void ResumeButtonPressed()
+    {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
+        // Disable leaderboard panel
+        leaderboardPanel.SetActive(false);
+
+        // Disable Resume Button
+        resumeButton.gameObject.transform.parent.gameObject.SetActive(false);
+
+        // Unpause Game
+        GameManager.Instance.PauseGame(false);
     }
     #endregion
 

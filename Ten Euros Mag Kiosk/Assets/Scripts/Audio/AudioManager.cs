@@ -14,16 +14,6 @@ public class AudioManager : Singleton<AudioManager>
 	{
 		base.Awake();
 	}
-
-	private void Start()
-	{
-
-	}
-
-	private void Update()
-	{
-
-	}
 	#endregion
 
 	#region Methods

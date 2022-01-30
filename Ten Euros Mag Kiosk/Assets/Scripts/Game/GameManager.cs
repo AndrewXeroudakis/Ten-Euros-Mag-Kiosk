@@ -19,6 +19,7 @@ public class GameManager : Singleton<GameManager>
     //[SerializeField]
     int maxLeaderboardSlots = 5;
 
+    // Timer
     Coroutine timerCoroutine;
 
     // Leaderboard
@@ -31,6 +32,7 @@ public class GameManager : Singleton<GameManager>
     // DateTime parsing method
     const string FMT = "O";
 
+    // Music
     AudioSource gameMusic;
     AudioSource leaderboardMusic;
     #endregion
@@ -39,18 +41,13 @@ public class GameManager : Singleton<GameManager>
     protected override void Awake()
     {
         base.Awake();
-        PlayerPrefs.DeleteAll(); // REMOVE THIS!!!!
+
         InitializeVariables();
     }
 
     void Start()
     {
         SubscribeToEvents();
-    }
-
-    void Update()
-    {
-        
     }
     #endregion
 
@@ -62,6 +59,7 @@ public class GameManager : Singleton<GameManager>
 
     void SubscribeToEvents()
     {
+        CoinGenerator.Instance.OnCollectedCoin += OnCollectedCoin;
         CoinGenerator.Instance.OnCollectedAll += OnCollectedAllCoins;
     }
 
@@ -83,6 +81,10 @@ public class GameManager : Singleton<GameManager>
 
         // Generate Coins
         CoinGenerator.Instance.GenerateCoins();
+
+        // Set Coins
+        UIManager.Instance.gameUIController.ResetCoinsText();
+        UIManager.Instance.gameUIController.SetTotalCoinsText(CoinGenerator.Instance.GetCoins());
 
         // Display graphics: Ready
         UIManager.Instance.gameUIController.DisplayReady();
@@ -163,8 +165,7 @@ public class GameManager : Singleton<GameManager>
                 leaderboard[leaderboard.Count - 1].round < currentRound)
             {
                 SaveScore(new Score(currentRound, DateTime.Now));
-            }
-                
+            }   
 
         // Stop timer
         if (timerCoroutine != null)
@@ -181,6 +182,9 @@ public class GameManager : Singleton<GameManager>
 
     public void RestartGame()
     {
+        // Clear Game
+        ClearGame();
+
         StartGame();
     }
 
@@ -196,6 +200,12 @@ public class GameManager : Singleton<GameManager>
 
         // Start next round
         StartCoroutine(StartRound());
+    }
+
+    void OnCollectedCoin()
+    {
+        // Set Coins
+        UIManager.Instance.gameUIController.SetCoinsText(CoinGenerator.Instance.GetCoins());
     }
 
     void OnCollectedAllCoins()
@@ -214,15 +224,15 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator StartGameEnumerator()
     {
-        // Stop music
-        if (leaderboardMusic != null)
-            leaderboardMusic.Stop();
-
         // Play Music
         if (gameMusic == null)
             gameMusic = AudioManager.Instance.PlayMusic("GameMusic");
         else
+        {
+            // Play Music From the beginning
+            gameMusic.Stop();
             gameMusic.Play();
+        }
 
         // Set current round
         currentRound = 0;
@@ -310,11 +320,58 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    public void StopLeaderboardMusic()
+    public void PauseGame(bool _pause)
     {
+        if (_pause)
+        {
+            // Pause
+            Time.timeScale = 0;
+
+            // Pause music
+            if (gameMusic != null)
+                gameMusic.Pause();
+
+            // Play Music
+            if (leaderboardMusic == null)
+                leaderboardMusic = AudioManager.Instance.PlayMusic("LeaderboardMusic");
+            else
+                leaderboardMusic.Play();
+
+            // Display Leaderboard
+            UIManager.Instance.gameUIController.DisplayLeaderboard(leaderboard);
+        }
+        else
+        {
+            // Unause
+            Time.timeScale = 1;
+
+            // Stop music
+            if (leaderboardMusic != null)
+                leaderboardMusic.Stop();
+
+            // Play music
+            if (gameMusic != null)
+                gameMusic.Play();
+        }
+    }
+
+    public void ClearGame()
+    {
+        // Stop All Coroutines
+        StopAllCoroutines();
+
         // Stop music
         if (leaderboardMusic != null)
             leaderboardMusic.Stop();
+
+        // Reset Game UI
+        UIManager.Instance.gameUIController.OpenGameUI();
+
+        // Remove remaining coins
+        CoinGenerator.Instance.RemoveAllCoins();
+
+        // Unause
+        Time.timeScale = 1;
     }
     #endregion
 }

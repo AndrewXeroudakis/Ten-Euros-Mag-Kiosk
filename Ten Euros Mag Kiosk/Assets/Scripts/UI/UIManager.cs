@@ -36,21 +36,6 @@ public class UIManager : Singleton<UIManager>
     {
         AudioManager.Instance.PlaySound("MenuBack");
     }
-
-    /*public IEnumerator MoveMenuTransition(bool _down, Action _endAction)
-    {
-        // Disable canvas interactivity
-        canvasGroup.interactable = false;
-
-        // Move
-        yield return new WaitForSeconds(0f);
-
-        // Invoke Action
-        _endAction?.Invoke();
-
-        // Enable canvas interactivity
-        canvasGroup.interactable = true;
-    }*/
     #endregion
 }
 
