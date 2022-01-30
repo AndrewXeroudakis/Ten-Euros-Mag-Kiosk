@@ -11,8 +11,6 @@ public class UIManager : Singleton<UIManager>
 
     [SerializeField]
     CanvasGroup canvasGroup;
-
-    static readonly float fadeDuration = 0.25f;
     #endregion
 
     #region Unity Callbacks
@@ -31,12 +29,12 @@ public class UIManager : Singleton<UIManager>
     #region Methods
     public void PlayOptionSelectedSFX()
     {
-        //AudioManager.Instance.PlaySound("");
+        AudioManager.Instance.PlaySound("MenuClick");
     }
 
     public void PlayBackSelectedSFX()
     {
-        //AudioManager.Instance.PlaySound("");
+        AudioManager.Instance.PlaySound("MenuBack");
     }
 
     /*public IEnumerator MoveMenuTransition(bool _down, Action _endAction)

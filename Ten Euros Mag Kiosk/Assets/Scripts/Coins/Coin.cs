@@ -77,7 +77,7 @@ public class Coin : MonoBehaviour
     public void CollectCoin()
     {
         // Play Sound
-        //AudioManager.Instance.PlaySound("");
+        AudioManager.Instance.PlaySound("CoinPickUp");
 
         // Remove coin from coins
         CoinGenerator.Instance.RemoveCoin(this);

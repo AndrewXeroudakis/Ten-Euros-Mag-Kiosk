@@ -30,6 +30,9 @@ public class GameManager : Singleton<GameManager>
 
     // DateTime parsing method
     const string FMT = "O";
+
+    AudioSource gameMusic;
+    AudioSource leaderboardMusic;
     #endregion
 
     #region Unity Callbacks
@@ -83,14 +86,26 @@ public class GameManager : Singleton<GameManager>
 
         // Display graphics: Ready
         UIManager.Instance.gameUIController.DisplayReady();
+
+        // Play Sound
+        AudioManager.Instance.PlaySound("ClockTick");
+
         yield return new WaitForSeconds(1f);
 
         // Display graphics: Set
         UIManager.Instance.gameUIController.DisplaySet();
+
+        // Play Sound
+        AudioManager.Instance.PlaySound("ClockTick");
+
         yield return new WaitForSeconds(1f);
 
         // Display graphics: Go
         UIManager.Instance.gameUIController.DisplayGo();
+
+        // Play Sounds
+        AudioManager.Instance.PlaySound("ClockTick2");
+        AudioManager.Instance.PlaySound("Bell");
 
         // Make all coins interactable
         CoinGenerator.Instance.SetAllCoinsInteractable();
@@ -126,6 +141,19 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator GameOver()
     {
+        // Stop music
+        if (gameMusic != null)
+            gameMusic.Stop();
+
+        // Play Sound
+        AudioManager.Instance.PlaySound("GameOver");
+
+        // Play Music
+        if (leaderboardMusic == null)
+            leaderboardMusic = AudioManager.Instance.PlayMusic("LeaderboardMusic");
+        else
+            leaderboardMusic.Play();
+
         // Game Over Graphic
         UIManager.Instance.gameUIController.DisplayGameOver();
 
@@ -159,7 +187,11 @@ public class GameManager : Singleton<GameManager>
     IEnumerator WinRound()
     {
         // Display graphics: You Win!
-        //UIManager.Instance.gameUIController.DisplayWin();
+        UIManager.Instance.gameUIController.DisplayWin();
+
+        // Play Sound
+        AudioManager.Instance.PlaySound("RoundWon");
+
         yield return new WaitForSeconds(1);
 
         // Start next round
@@ -182,6 +214,16 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator StartGameEnumerator()
     {
+        // Stop music
+        if (leaderboardMusic != null)
+            leaderboardMusic.Stop();
+
+        // Play Music
+        if (gameMusic == null)
+            gameMusic = AudioManager.Instance.PlayMusic("GameMusic");
+        else
+            gameMusic.Play();
+
         // Set current round
         currentRound = 0;
 
@@ -266,6 +308,13 @@ public class GameManager : Singleton<GameManager>
                 Debug.Log(string.Format("score {0} : round = {1}, dateTime = {2}", i, loadedScores[i].round, loadedScores[i].dateTime));
             }
         }
+    }
+
+    public void StopLeaderboardMusic()
+    {
+        // Stop music
+        if (leaderboardMusic != null)
+            leaderboardMusic.Stop();
     }
     #endregion
 }

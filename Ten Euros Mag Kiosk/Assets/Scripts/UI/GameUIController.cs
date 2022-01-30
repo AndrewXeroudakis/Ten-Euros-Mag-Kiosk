@@ -32,7 +32,6 @@ public class GameUIController : MonoBehaviour
     static readonly string GO_TEXT = "GO!";
     static readonly string WIN_TEXT = "ROUND WON!";
     static readonly string LOSE_TEXT = "GAME OVER";
-    static readonly int startRoundCountdown = 2;
     #endregion
 
     #region Unity Callbacks
@@ -47,9 +46,7 @@ public class GameUIController : MonoBehaviour
     {
         // Leaderboard
         menuButton.onClick.AddListener(MenuButtonPressed);
-        //menuButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
         restartButton.onClick.AddListener(RestartButtonPressed);
-        //restartButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
     }
 
     #region Round
@@ -106,18 +103,24 @@ public class GameUIController : MonoBehaviour
 
     void MenuButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         // Disable leaderboard panel
         leaderboardPanel.SetActive(false);
 
-        // Stop game
-
+        // Stop Music
+        GameManager.Instance.StopLeaderboardMusic();
 
         // Display menu
-
+        UIManager.Instance.menuUIController.OpenMainMenu();
     }
 
     void RestartButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         // Disable leaderboard panel
         leaderboardPanel.SetActive(false);
 

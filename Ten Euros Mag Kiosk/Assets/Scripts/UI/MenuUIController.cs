@@ -32,7 +32,9 @@ public class MenuUIController : MonoBehaviour
     static readonly string SOUNDEFFECTS_VOLUME_KEY = "soundEffectsVolume";
     static readonly string MUSIC_VOLUME_KEY = "musicVolume";
     static readonly float defaultSoundEffectsVolume = 0.5f;
-    static readonly float defaultMusicVolume = 0.75f;
+    static readonly float defaultMusicVolume = 0.5f;
+
+    AudioSource menuMusic;
     #endregion
 
     #region Unity Callbacks
@@ -48,23 +50,16 @@ public class MenuUIController : MonoBehaviour
     {
         // Play Game
         playButton.onClick.AddListener(PlayButtonPressed);
-        //playButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
 
         // Options
         optionsButton.onClick.AddListener(OptionsButtonPressed);
-        //optionsButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
         noButton.onClick.AddListener(NoButtonPressed);
-        //noButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
         yesButton.onClick.AddListener(YesButtonPressed);
-        //yesButton.onClick.AddListener(UIManager.Instance.PlayBackSelectedSFX);
 
         // Quit
         quitButton.onClick.AddListener(QuitButtonPressed);
-        //quitButton.onClick.AddListener(UIManager.Instance.PlayBackSelectedSFX);
         quitYesButton.onClick.AddListener(QuitYesButtonPressed);
-        //quitYesButton.onClick.AddListener(UIManager.Instance.PlayOptionSelectedSFX);
         quitNoButton.onClick.AddListener(QuitNoButtonPressed);
-        //quitNoButton.onClick.AddListener(UIManager.Instance.PlayBackSelectedSFX);
     }
 
     void SubscribeEvents()
@@ -85,7 +80,10 @@ public class MenuUIController : MonoBehaviour
         HideMenu(false);
 
         // Play Music
-        //AudioManager.Instance.PlayMusic("");
+        if (menuMusic == null)
+            menuMusic = AudioManager.Instance.PlayMusic("MenuMusic");
+        else
+            menuMusic.Play();
     }
 
     #region Hide Scripts
@@ -157,6 +155,13 @@ public class MenuUIController : MonoBehaviour
     #region Play Game
     void PlayButtonPressed()
     {
+        // Stop music
+        if (menuMusic != null)
+            menuMusic.Stop();
+
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         // Hide Menu
         HideMenu(true);
 
@@ -171,6 +176,9 @@ public class MenuUIController : MonoBehaviour
     #region Options
     void OptionsButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         // Load volumes
         LoadVolume();
 
@@ -207,6 +215,9 @@ public class MenuUIController : MonoBehaviour
 
     void NoButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayBackSelectedSFX();
+
         // Reset values
         soundEffectsVolumeSlider.value = defaultSoundEffectsVolume;
         musicVolumeSlider.value = defaultMusicVolume;
@@ -220,6 +231,9 @@ public class MenuUIController : MonoBehaviour
 
     void YesButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         //Save to player prefs
         SaveVolume();
 
@@ -238,6 +252,9 @@ public class MenuUIController : MonoBehaviour
     #region Quit
     void QuitButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         // Enable popUpDialogContainer
         if (!popUpDialogContainer.activeSelf)
             popUpDialogContainer.SetActive(true);
@@ -249,11 +266,17 @@ public class MenuUIController : MonoBehaviour
 
     void QuitYesButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayOptionSelectedSFX();
+
         Quit();
     }
 
     void QuitNoButtonPressed()
     {
+        // Play Sound
+        UIManager.Instance.PlayBackSelectedSFX();
+
         // Disable popUpDialogContainer
         if (popUpDialogContainer.activeSelf)
             popUpDialogContainer.SetActive(false);

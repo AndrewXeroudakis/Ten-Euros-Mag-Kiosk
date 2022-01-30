@@ -90,6 +90,9 @@ public class CoinGenerator : Singleton<CoinGenerator>
             StartCoroutine(coin.MoveTo(randomPosition, randomDuration));
         }
 
+        // Play Sound
+        AudioManager.Instance.PlaySound("CoinsDrop");
+
         // Debug
         if (debug)
         {
